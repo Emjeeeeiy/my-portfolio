@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify gawa gawaan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #1db954; /* green color */
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="file"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #1db954;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1aa34a;
+        }
+        #songs-list div {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        }
+        audio {
+            margin-top: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>spotify na ginawa</h1>
+    <form id="add-song-form" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Song Title" required>
+        <input type="text" name="artist" placeholder="Artist" required>
+        <input type="text" name="album" placeholder="Album" required>
+        <input type="text" name="genre" placeholder="Genre">
+        <input type="file" name="file" required>
+        <button type="submit">Add Song</button>
+    </form>
+
+    <h2>Search Songs</h2>
+    <input type="text" id="search-input" placeholder="Search by title, artist, or album">
+    <button id="search-button">Search</button>
+
+    <h2>Songs List</h2>
+    <div id="songs-list"></div>
+
+    <script>
+        document.getElementById('add-song-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            await fetch('/add-song', {
+                method: 'POST',
+                body: formData
+            });
+            e.target.reset();
+            loadSongs();
+        });
+
+        document.getElementById('search-button').addEventListener('click', async () => {
+            const query = document.getElementById('search-input').value;
+            const response = await fetch(`/search-songs?query=${encodeURIComponent(query)}`);
+            const songs = await response.json();
+            displaySongs(songs);
+        });
+
+        async function loadSongs() {
+            const response = await fetch('/songs');
+            const songs = await response.json();
+            displaySongs(songs);
+        }
+
+        function displaySongs(songs) {
+            const songsList = document.getElementById('songs-list');
+            songsList.innerHTML = '';
+
+            songs.forEach(song => {
+                const songElement = document.createElement('div');
+                songElement.innerHTML = `
+                    <p><strong>${song.title}</strong> by ${song.artist} (${song.album})</p>
+                    <audio controls>
+                        <source src="${song.url}" type="audio/mpeg">
+                        Your browser does not support the audio tag.
+                    </audio>
+                `;
+                songsList.appendChild(songElement);
+            });
+        }
+
+        // song loads
+        window.onload = loadSongs;
+    </script>
+</body>
+</html>
